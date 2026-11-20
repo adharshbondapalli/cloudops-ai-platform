@@ -78,8 +78,20 @@ def create_order(order: OrderRequest):
             "order_status": "confirmed"
         }
 
-    except requests.RequestException as error:
+    except requests.HTTPError as error:
+        if error.response.status_code == 404:
+            raise HTTPException(
+                status_code=404,
+                detail="Product not found"
+            )
+
         raise HTTPException(
             status_code=503,
-            detail=f"Service communication failed: {str(error)}"
+            detail="A dependent service returned an error"
+        )
+
+    except requests.RequestException:
+        raise HTTPException(
+            status_code=503,
+            detail="Unable to communicate with dependent services"
         )
